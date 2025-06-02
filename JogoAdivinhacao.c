@@ -15,7 +15,6 @@ void *ThreadReceberResposta(void *arg);
 
 int main()
 {
-    // Cria os pipes
     pipe(pipeJogadorToGerador);
     pipe(pipeGeradorToJogador);
 
@@ -101,7 +100,7 @@ void *ThreadEnviarPalpite(void *arg)
         printf("Digite seu palpite (1 a 100): ");
         scanf("%d", &palpite);
         write(pipeJogadorToGerador[1], &palpite, sizeof(int));
-        if (palpite >= 1 && palpite <= 100)
+        if (palpite >= 1 && palpite <= 100) // Se for entre ele deve continuar para que o usuario consiga dar mais palpites.
         {
             continue;
         }

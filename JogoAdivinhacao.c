@@ -1,5 +1,3 @@
-// JogoAdivinhacao.c
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -7,13 +5,13 @@
 #include <string.h>
 #include <time.h>
 
-// Pipes
+// Pipes criados
 int pipeJogadorToGerador[2];
 int pipeGeradorToJogador[2];
 
-// Threads do Jogador
-void *thread_enviar(void *arg);
-void *thread_receber(void *arg);
+// Threads para enviar o palpite e receber resposta.
+void *ThreadEnviarPalpite(void *arg);
+void *ThreadReceberResposta(void *arg);
 
 int main()
 {
@@ -21,24 +19,24 @@ int main()
     pipe(pipeJogadorToGerador);
     pipe(pipeGeradorToJogador);
 
-    pid_t pid = fork();
+    pid_t ProcessoFilho = fork();
 
-    if (pid < 0)
+    if (ProcessoFilho < 0)
     {
-        perror("Erro ao criar processo");
+        perror("Processo filho não foi criado");
         exit(1);
     }
 
-    if (pid == 0)
+    if (ProcessoFilho == 0)
     {
-        // Processo Jogador (Cliente)
+        // Processo Jogador - Cliente
         close(pipeJogadorToGerador[0]); // Fecha leitura do pipe de envio
         close(pipeGeradorToJogador[1]); // Fecha escrita do pipe de resposta
 
         pthread_t enviar, receber;
 
-        pthread_create(&enviar, NULL, thread_enviar, NULL);
-        pthread_create(&receber, NULL, thread_receber, NULL);
+        pthread_create(&enviar, NULL, ThreadEnviarPalpite, NULL);
+        pthread_create(&receber, NULL, ThreadReceberResposta, NULL);
 
         pthread_join(enviar, NULL);
         pthread_join(receber, NULL);
@@ -48,7 +46,7 @@ int main()
     }
     else
     {
-        // Processo Gerador (Servidor)
+        // Processo Gerador - Servidor
         close(pipeJogadorToGerador[1]); // Fecha escrita do pipe de envio
         close(pipeGeradorToJogador[0]); // Fecha leitura do pipe de resposta
 
@@ -56,16 +54,26 @@ int main()
         int numeroSecreto = (rand() % 100) + 1;
         char buffer[128];
 
-        while (1)
+        int palpite;
+        while (1) // fica lendo o palpite do jogador.
         {
-            int palpite;
+            char Continuar[10];
             read(pipeJogadorToGerador[0], &palpite, sizeof(int));
 
             if (palpite == numeroSecreto)
             {
                 snprintf(buffer, sizeof(buffer), "✅ Acertou! O número era %d.\n", numeroSecreto);
                 write(pipeGeradorToJogador[1], buffer, strlen(buffer) + 1);
-                break;
+
+                printf("Deseja continuar o jogo?");
+                scanf("%s", Continuar);
+                if (strcmp(Continuar, "S") == 0 || strcmp(Continuar, "s") == 0 || strcmp(Continuar, "Sim") == 0 || strcmp(Continuar, "sim") == 0)
+                {
+                }
+                else
+                {
+                    break;
+                }
             }
             else if (palpite < numeroSecreto)
             {
@@ -85,7 +93,7 @@ int main()
     return 0;
 }
 
-void *thread_enviar(void *arg)
+void *ThreadEnviarPalpite(void *arg)
 {
     int palpite;
     while (1)
@@ -101,13 +109,13 @@ void *thread_enviar(void *arg)
     pthread_exit(NULL);
 }
 
-void *thread_receber(void *arg)
+void *ThreadReceberResposta(void *arg)
 {
     char buffer[128];
     while (1)
     {
         read(pipeGeradorToJogador[0], buffer, sizeof(buffer));
-        printf("Servidor: %s", buffer);
+        printf("\n\nServidor: %s", buffer);
 
         if (strstr(buffer, "Acertou") != NULL)
         {

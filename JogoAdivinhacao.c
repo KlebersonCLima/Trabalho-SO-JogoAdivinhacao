@@ -8,7 +8,7 @@
 // Pipes para comunicação entre processos
 int pipeJogadorToGerador[2];
 int pipeGeradorToJogador[2];
-int pipeControlFlow[2]; // Pipe adicional para controle de fluxo
+int pipeControle[2]; // Pipe adicional para controle de fluxo
 
 // Variáveis globais para controle
 int jogoAtivo = 1;
@@ -37,9 +37,7 @@ void exibirCabecalho()
 int main()
 {
 
-    if (pipe(pipeJogadorToGerador) == -1 ||
-        pipe(pipeGeradorToJogador) == -1 ||
-        pipe(pipeControlFlow) == -1)
+    if (pipe(pipeJogadorToGerador) == -1 ||  pipe(pipeGeradorToJogador) == -1 || pipe(pipeControle) == -1)
     {
         perror("Erro ao criar pipes");
         exit(1);
@@ -55,10 +53,10 @@ int main()
 
     if (ProcessoFilho == 0)
     {
-        // ===== PROCESSO JOGADOR (CLIENTE) =====
+        // PROCESSO JOGADOR (CLIENTE) 
         close(pipeJogadorToGerador[0]); // Fecha leitura do pipe de envio
         close(pipeGeradorToJogador[1]); // Fecha escrita do pipe de resposta
-        close(pipeControlFlow[1]);      // Fecha escrita do pipe de controle
+        close(pipeControle[1]);         // Fecha escrita do pipe de controle
 
         limparTela();
         exibirCabecalho();
@@ -73,14 +71,14 @@ int main()
 
         close(pipeJogadorToGerador[1]);
         close(pipeGeradorToJogador[0]);
-        close(pipeControlFlow[0]);
+        close(pipeControle[0]);
     }
     else
     {
-        // ===== PROCESSO GERADOR (SERVIDOR) =====
+        //PROCESSO GERADOR (SERVIDOR)
         close(pipeJogadorToGerador[1]); // Fecha escrita do pipe de envio
         close(pipeGeradorToJogador[0]); // Fecha leitura do pipe de resposta
-        close(pipeControlFlow[0]);      // Fecha leitura do pipe de controle
+        close(pipeControle[0]);         // Fecha leitura do pipe de controle
 
         srand(time(NULL));
 
@@ -147,7 +145,7 @@ int main()
 
         close(pipeJogadorToGerador[0]);
         close(pipeGeradorToJogador[1]);
-        close(pipeControlFlow[1]);
+        close(pipeControle[1]);
     }
 
     return 0;

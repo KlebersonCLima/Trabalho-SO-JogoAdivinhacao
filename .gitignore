@@ -1,0 +1,8 @@
+# Binários compilados
+JogoAdivinhacao
+*.o
+*.out
+*.exe
+
+# Editor
+.vscode/
